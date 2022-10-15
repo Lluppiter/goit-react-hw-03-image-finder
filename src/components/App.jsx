@@ -1,81 +1,57 @@
 import { Component } from 'react';
-import { nanoid } from 'nanoid';
-import { Section } from './Section/Section';
-import { FormAddContact } from './FormAddContact/FormAddContact';
-import { ListContacts } from './ListContacts/ListContacts';
-import { Input } from './FilterContacts/Filter';
-
-const LS_KEY = 'Contacts'
-const contactsFromLS = localStorage.getItem(LS_KEY)
-const parsedContactsFromLS = JSON.parse(contactsFromLS)
-
-const contactsFromStart = [
-      { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-      { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-      { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-      { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-    ]
-
+import { Serchbar } from './Searchbar/Searchbar';
+import { Loader } from './Loader/Loader';
+import { ImageGallery } from './ImageGallery/ImageGallery';
+import { Button } from './Button/Button';
+import { Modal } from './Modal/Modal';
+import { fetchApi } from './api/api';
 
 export class App extends Component {
   state = {
-    contacts: parsedContactsFromLS ? parsedContactsFromLS : contactsFromStart,
-    filter: '',
+    images: [],
+    loading: false,
+    page: 1,
+    error: null,
+    request: null,
+    isShown: false,
   };
 
-
-
-  handleInput = ({ target: { name, value } }) => {
-    this.setState({ [name]: value });
-  };
-
-  addNewContact = (name, number) => {
-    const newContact = {
-      name: name,
-      number: number,
-      id: nanoid(),
-    };
-    const overlap = this.state.contacts.filter(
-      contact =>
-        contact.name.toLowerCase() === newContact.name.toLowerCase() &&
-        contact.number.toLowerCase() === newContact.number.toLowerCase()
-    );
-    overlap.length === 0
-      ? this.setState(prevState => ({
-          contacts: [...prevState.contacts, newContact],
+  fetchImages = (page, request) => {
+    fetchApi(page, request)
+      .then(response =>
+        this.setState(prevState => ({
+          images: [...prevState.images, ...response.data.hits],
         }))
-      : alert('This contact has been added');
+      )
+      .catch(error => {
+        this.setState({ error: error.message });
+      })
+      .finally(() => {
+        this.setState({ loading: false });
+      });
+  };
+  onSubmit = e => {
+    e.preventDefault();
+    const searchRequest = e.target.input.value;
+    this.setState({ request: searchRequest });
+    this.setState({ isShown: true });
   };
 
-  deleteContact = e => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(
-        contact => contact.id !== e.target.value
-      ),
-    }));
-  };
-
-  componentDidUpdate() { 
-    localStorage.setItem(LS_KEY, JSON.stringify(this.state.contacts))
+  componentDidUpdate(prevProps, prevState) {
+    const { page, request, isShown } = this.state;
+    if (prevState.isShown !== isShown && isShown) {
+      this.fetchImages(page, request);
+    }
   }
 
   render() {
     return (
       <>
-        <Section title="Phonebook">
-          <FormAddContact
-            addNewContact={this.addNewContact}
-            handleInput={this.handleInput}
-          />
-        </Section>
-        <Section title="Contacts">
-          <Input handleInput={this.handleInput} />
-          <ListContacts
-            contacts={this.state.contacts}
-            filter={this.state.filter}
-            userDelete={this.deleteContact}
-          />
-        </Section>
+        <Serchbar onSubmit={this.onSubmit} />
+        <Loader />
+        <ImageGallery images={this.state.images} />
+        <Button />
+        <Modal />
       </>
     );
   }
