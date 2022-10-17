@@ -1,26 +1,30 @@
 import { Component } from 'react';
-import { Serchbar } from './Searchbar/Searchbar';
+import { Searchbar } from './Searchbar/Searchbar';
 import { Loader } from './Loader/Loader';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Button } from './Button/Button';
 import { Modal } from './Modal/Modal';
 import { fetchApi } from './api/api';
+import { mapper } from 'utils/Mapper';
+import styles from '../components/App.module.css'
 
 export class App extends Component {
   state = {
     images: [],
     loading: false,
     page: 1,
-    error: null,
     request: null,
+    error: null,
     isShown: false,
+    currentImage: null,
   };
 
-  fetchImages = (page, request) => {
+  fetchImages = () => {
+    const {page, request } = this.state
     fetchApi(page, request)
       .then(response =>
         this.setState(prevState => ({
-          images: [...prevState.images, ...response.data.hits],
+          images: [...prevState.images, ...mapper(response.data.hits)],
         }))
       )
       .catch(error => {
@@ -30,29 +34,49 @@ export class App extends Component {
         this.setState({ loading: false });
       });
   };
+
   onSubmit = e => {
     e.preventDefault();
+    this.setState({loading: true})
+    if (this.state.isShown) {
+      this.setState({images: []})      
+    }
     const searchRequest = e.target.input.value;
     this.setState({ request: searchRequest });
     this.setState({ isShown: true });
   };
 
-  componentDidUpdate(prevProps, prevState) {
-    const { page, request, isShown } = this.state;
-    if (prevState.isShown !== isShown && isShown) {
-      this.fetchImages(page, request);
-    }
+  changeCurrentImage = data => {
+    this.setState({ currentImage: data })
+  };
+
+  loadMore = () => {
+    this.setState(prevState => ({ page: prevState.page + 1}))
   }
 
+  closeModal = () => { 
+    this.setState({currentImage: null})
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    const { request, page } = this.state;
+    if (prevState.request !== request && request || prevState.page !== page) {
+      this.fetchImages();
+    }
+  };
+
   render() {
+    const { loading, isShown, images, currentImage } = this.state;
     return (
-      <>
-        <Serchbar onSubmit={this.onSubmit} />
-        <Loader />
-        <ImageGallery images={this.state.images} />
-        <Button />
-        <Modal />
-      </>
+      <div className = { styles.App }>
+        <Searchbar onSubmit={this.onSubmit} />
+        {loading && <Loader />}
+        {isShown && (<>
+        <ImageGallery images={images} openModal={this.changeCurrentImage } /> 
+          <Button text='Load More' handlerClick={this.loadMore} />
+        </>)}
+        {currentImage && <Modal currentImage={currentImage} closeModal={ this.closeModal } />}
+      </div>
     );
   }
 }

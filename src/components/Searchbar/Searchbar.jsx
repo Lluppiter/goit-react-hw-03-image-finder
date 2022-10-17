@@ -1,15 +1,20 @@
-export const Serchbar = ({ onSubmit }) => {
+import styles from '../Searchbar/Searchbar.module.css'
+import { CiSearch } from "react-icons/ci";
+import PropTypes from 'prop-types'
+
+export const Searchbar = ({ onSubmit }) => {
   return (
     <>
-      <header className="searchbar">
-        <form className="form" onSubmit={onSubmit}>
-          <button type="submit" className="button">
-            <span className="button-label">Search</span>
+      <header className={styles.Searchbar}>
+        <form className={styles.SearchForm} onSubmit={onSubmit}>
+          <button type="submit" className={styles.SearchFormButton}>
+            <span className={styles.SearchFormButtonLabel}>Search</span>
+            <CiSearch />
           </button>
 
           <input
             name="input"
-            className="input"
+            className={styles.SearchFormInput}
             type="text"
             autoComplete="off"
             autoFocus
@@ -20,3 +25,6 @@ export const Serchbar = ({ onSubmit }) => {
     </>
   );
 };
+Searchbar.propTypes = {
+  onSubmit: PropTypes.func.isRequired
+}
