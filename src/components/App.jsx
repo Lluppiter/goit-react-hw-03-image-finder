@@ -35,19 +35,17 @@ export class App extends Component {
       });
   };
 
-  onSubmit = e => {
-    e.preventDefault();
-    this.setState({loading: true})
+  handleSubmit = data => {
+   this.setState({loading: true})
     if (this.state.isShown) {
       this.setState({images: []})      
     }
-    const searchRequest = e.target.input.value;
-    this.setState({ request: searchRequest });
+    this.setState({ request: data });
     this.setState({ isShown: true });
   };
 
-  changeCurrentImage = data => {
-    this.setState({ currentImage: data })
+  changeCurrentImage = (url, tags) => {
+    this.setState({ currentImage: {url: url, tags: tags} })
   };
 
   loadMore = () => {
@@ -69,7 +67,7 @@ export class App extends Component {
     const { loading, isShown, images, currentImage } = this.state;
     return (
       <div className = { styles.App }>
-        <Searchbar onSubmit={this.onSubmit} />
+        <Searchbar handleSubmit={this.handleSubmit} />
         {loading && <Loader />}
         {isShown && (<>
         <ImageGallery images={images} openModal={this.changeCurrentImage } /> 
