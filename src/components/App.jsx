@@ -60,7 +60,7 @@ export class App extends Component {
 
   componentDidUpdate(prevProps, prevState) {
     const { request, page } = this.state;
-    if (prevState.request !== request && request || prevState.page !== page) {
+    if ((prevState.request !== request && request) || prevState.page !== page) {
       this.fetchImages();
     }
   };
